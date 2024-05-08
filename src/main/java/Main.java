@@ -8,10 +8,11 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 
 public class Main {
     public static final String REMOTE_SERVICE_URI =
-            "https://api.nasa.gov/planetary/apod?api_key=18vw9k8nWaiPG4fCHYGudKxROZfXCodgGbETp0mz";
+            "https://api.nasa.gov/planetary/apod?api_key=OoMKLarIbpOHeO9JMXMXbFO2ySV4XdPEPcS4hyiz&date=2024-5-7";
     public static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) throws IOException {
@@ -22,19 +23,22 @@ public class Main {
                         .setRedirectsEnabled(false)
                         .build())
                 .build();
-        HttpGet request = new HttpGet(REMOTE_SERVICE_URI);
-        CloseableHttpResponse response = httpClient.execute(request);
+
+        CloseableHttpResponse response = httpClient.execute(new HttpGet(REMOTE_SERVICE_URI));
+
         NasaObject nasaObject = mapper.readValue(response.getEntity().getContent(), NasaObject.class);
         System.out.println(nasaObject);
-        HttpGet request2 = new HttpGet(nasaObject.getUrl());
-        CloseableHttpResponse response2 = httpClient.execute(request2);
+
+        CloseableHttpResponse pictureResponse = httpClient.execute(new HttpGet(nasaObject.getUrl()));
+
         String[] arr = nasaObject.getUrl().split("/");
-        String file = arr[6];
-        HttpEntity entity = response2.getEntity();
-        if (entity != null) {
-            FileOutputStream fos = new FileOutputStream(file);
-            entity.writeTo(fos);
-            fos.close();
-        }
+        String fileName = arr[arr.length - 1];
+
+        HttpEntity entity = pictureResponse.getEntity();
+
+        FileOutputStream fos = new FileOutputStream(fileName);
+        entity.writeTo(fos);
+        fos.close();
+
     }
 }
